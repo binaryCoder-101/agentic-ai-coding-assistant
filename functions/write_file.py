@@ -1,4 +1,5 @@
 import os
+from google.genai import types
 
 def write_file(working_directory, file_path, content):
     try:
@@ -20,3 +21,21 @@ def write_file(working_directory, file_path, content):
     
     except Exception as e:
         return f"Error writing to file: {e}"
+
+schema_write_file = types.FunctionDeclaration(
+    name="write_file",
+    description="Lists files in a specified directory relative to the working directory, providing file size and directory status",
+    parameters=types.Schema(
+        type=types.Type.OBJECT,
+        properties={
+            "file_path": types.Schema(
+                type=types.Type.STRING,
+                description="Path to the file that needs to be modified",
+            ),
+            "content": types.Schema(
+                type=types.Type.STRING,
+                description="Content that needs to be written to the file",
+            ),
+        },
+    ),
+)
