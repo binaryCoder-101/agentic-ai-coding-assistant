@@ -5,6 +5,7 @@ import argparse
 from google.genai import types
 from prompts import system_prompt 
 from functions.call_functions import available_functions
+from functions.call_functions import call_function
 
 def main():
     load_dotenv()
@@ -48,8 +49,25 @@ def main():
     # else:
     #     print("Response:")
     #     print(response.text)
+
+    results = []
+
     for function_call in response.function_calls:
-        print(f"Calling function: {function_call.name}({function_call.args})")
+        function_call_result = call_function(function_call)
+        
+        if function_call_result.parts == []:
+            raise ValueError("Empty parts list")
+        if not function_call_result.parts[0].function_response:
+            raise ValueError("Not FunctionResponse object")
+        if not function_call_result.parts[0].function_response.response:
+            raise ValueError("No result available")
+        
+        results.append(function_call_result.parts[0])
+
+        print(f"-> {function_call_result.parts[0].function_response.response}")
+
+
+        
 
 
 if __name__=="__main__":
