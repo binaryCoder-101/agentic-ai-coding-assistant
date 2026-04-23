@@ -26,7 +26,10 @@ def main():
     verbose_flag = args.verbose
     if verbose_flag:
         print(f"User prompt: {prompt}\n")
+    
+    generate_response(client, messages, verbose_flag)
 
+def generate_response(client, messages, verbose_flag):
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=messages,
@@ -47,7 +50,6 @@ def main():
     print(response.text)
 
     results = []
-
     for function_call in response.function_calls:
         function_call_result = call_function(function_call)
         if (
@@ -56,10 +58,10 @@ def main():
             or not function_call_result.parts[0].function_response.response
         ):
             raise RuntimeError(f"Empty function response for {function_call.name}")
-
-        results.append(function_call_result.parts[0])
+        
         if verbose_flag:
             print(f"-> {function_call_result.parts[0].function_response.response}")
+        results.append(function_call_result.parts[0])
 
 
 if __name__=="__main__":
