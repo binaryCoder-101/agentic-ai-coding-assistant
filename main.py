@@ -19,15 +19,13 @@ def main():
     if not api_key:
         raise RuntimeError("GEMINI_API_KEY environment variable not set")
 
+    prompt = args.user_prompt
     client = genai.Client(api_key=api_key)
     messages = [types.Content(role="user", parts=[types.Part(text=prompt)])]
 
-
-
-
-    prompt = args.user_prompt
-    # verbose_flag = args.verbose
-
+    verbose_flag = args.verbose
+    if verbose_flag:
+        print(f"User prompt: {prompt}\n")
 
     response = client.models.generate_content(
         model="gemini-2.5-flash",
@@ -41,34 +39,27 @@ def main():
     if not response.usage_metadata:
         raise RuntimeError("Failed API request")
 
-    # if verbose_flag:
-    #     print(f"User prompt: {prompt}")
-    #     print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
-    #     print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
-    #     print("Response:")
-    #     print(response.text)
-    # else:
-    #     print("Response:")
-    #     print(response.text)
+    if verbose_flag:
+        print(f"Prompt tokens: {response.usage_metadata.prompt_token_count}")
+        print(f"Response tokens: {response.usage_metadata.candidates_token_count}")
+
+    print("Response:")
+    print(response.text)
 
     results = []
 
     for function_call in response.function_calls:
         function_call_result = call_function(function_call)
-        
-        if function_call_result.parts == []:
-            raise ValueError("Empty parts list")
-        if not function_call_result.parts[0].function_response:
-            raise ValueError("Not FunctionResponse object")
-        if not function_call_result.parts[0].function_response.response:
-            raise ValueError("No result available")
-        
+        if (
+            function_call_result.parts == []
+            or not function_call_result.parts[0].function_response
+            or not function_call_result.parts[0].function_response.response
+        ):
+            raise RuntimeError(f"Empty function response for {function_call.name}")
+
         results.append(function_call_result.parts[0])
-
-        print(f"-> {function_call_result.parts[0].function_response.response}")
-
-
-        
+        if verbose_flag:
+            print(f"-> {function_call_result.parts[0].function_response.response}")
 
 
 if __name__=="__main__":
