@@ -28,11 +28,15 @@ def main():
         print(f"User prompt: {prompt}\n")
     
     for _ in range(20):
-        response = generate_response(client, messages, verbose_flag)
-        if response.candidates:
-            for candidate in response.candidates:
+        generate_response_object = generate_response(client, messages, verbose_flag)
+        if not generate_response_object:
+            break
+        if generate_response_object[0].candidates:
+            for candidate in generate_response_object[0].candidates:
                 messages.append(candidate.content)
-            messages.append(types.Content(role="user", parts=response))
+            messages.append(types.Content(role="user", parts=generate_response_object[1]))
+    else:
+        raise RuntimeError("No response generated!")
 
         
                 
@@ -59,7 +63,7 @@ def generate_response(client, messages, verbose_flag):
         print(response.text)
         return 
 
-    results = []
+    function_responses = []
     for function_call in response.function_calls:
         function_call_result = call_function(function_call)
         if (
@@ -71,8 +75,8 @@ def generate_response(client, messages, verbose_flag):
         
         if verbose_flag:
             print(f"-> {function_call_result.parts[0].function_response.response}")
-        results.append(function_call_result.parts[0])
-    return response
+        function_responses.append(function_call_result.parts[0])
+    return (response, function_responses)
 
 if __name__=="__main__":
     main()
